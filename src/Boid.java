@@ -2,14 +2,25 @@
 
 public class Boid{
 
-    private float[] position;
-    private float[] direction;
-    private static float speed;
+    private double[] position;
+    private double[] direction;
+    private static double speed = 1.0;
 
-    public Boid(float[] position, float[] direction, float speed){
+    public Boid(double[] position, double[] direction, double speed){
         this.position = position;
         this.direction = direction;
         this.speed = speed;
+    }
+
+    public Boid(double[] position,double[] direction){
+        this.position = position;
+        this.direction = direction;
+        this.speed = 1.0;
+    }
+
+    public Boid(Boid boid){
+        this.direction = boid.direction;
+        this.position = boid.position;
     }
 
 }
