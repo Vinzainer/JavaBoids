@@ -1,6 +1,4 @@
 public class Boids{
-
-    public void test(){
-        
-    }
-} 
+  private int x;
+  private int y;
+}
