@@ -2,6 +2,7 @@
 
 public class Boid{
 
+    //attributes
     private double[] position;
     private double[] direction;
     private static double speed = 1.0;
@@ -9,6 +10,7 @@ public class Boid{
     private static int nId = 0;
     private String id;
 
+    //constructors
     public Boid(double[] position, double[] direction){
         this.position = position;
         this.direction = direction;
@@ -26,10 +28,20 @@ public class Boid{
         addNbBoid(1);
     }
 
-    private String genId(){
-        return "b" + nId;
+    //direction
+    public double[] getDirection(){
+        return direction;
     }
 
+    public void setDirection(double[] nDir){
+        direction = nDir;
+    }
+
+    public void modDir(double[] delta){
+        //to do
+    }
+
+    //position
     public void setPosition(double[] new_position){
         position = new_position;
     }
@@ -43,19 +55,46 @@ public class Boid{
         position = newPos;
     }
 
+    //speed
     public static void setSpeed(double spd){
         speed = spd;
     }
 
+    public static double getSpeed(){
+        return speed;
+    }
 
+    public static void modSpeed(double delta){
+        speed += delta;
+    }
+
+    //id
     public static void addNId(int x){
         nId += x;
+    }
+
+    private String genId(){
+        return "b" + nId;
+    }
+
+    public String getId(){
+        return id;
+    }
+
+    public void setId(String nId){
+        id = nId;
+    }
+
+    //nbBoid
+    public static int getNbBoid(){
+        return nbBoid;
     }
 
     public static void addNbBoid(int x){
         nbBoid += x;
     }
 
+    //others
     public String toString(){
         String res = id + ":\n";
         res += "position  x: " + position[0] + " y: " + position[1] + "\n";
