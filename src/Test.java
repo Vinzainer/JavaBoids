@@ -1,20 +1,37 @@
+import javax.swing.JFrame;
+import java.awt.Dimension;
 
-public abstract class Test{
+public abstract class Test {
 
+    public static void main(String[] args) {
 
-    public static void main(String[] args){
+        JFrame window = new JFrame();
+        window.setTitle("Boids in Java");
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.setVisible(true);
+        Boids bs = new Boids(30);
+        window.setSize(new Dimension(1200, 900));
+        // window.setContentPane(bs);
+        window.add(bs);
 
-        double[] pos1 = {2,3};
-        double[] dir1 = {1,1};
-        double[] pos2 = {6,6};
-
-        Boid b0 = new Boid(pos1,dir1);
-        Boid b1 = new Boid(b0);
-
-        b1.modPosition(dir1);
-
-        System.out.println(b0);
-        System.out.println(b1);
+        long sTime, eTime;
+        boolean end = false;
+        while (!end) {
+            System.out.println(bs.getBoids().get(0));
+            sTime = System.currentTimeMillis();
+            eTime = sTime + 1000 / Boids.getSpeedFraction();
+            bs.next();
+            bs.repaint();
+            bs.getToolkit().sync(); 
+            if (System.currentTimeMillis() < eTime) {
+                try {
+                    Thread.sleep(Math.abs(System.currentTimeMillis() - eTime));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
     }
+
 }
