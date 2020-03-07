@@ -9,7 +9,7 @@ public abstract class Test {
         window.setTitle("Boids in Java");
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setVisible(true);
-        Boids bs = new Boids(30);
+        Boids bs = new Boids(50);
         window.setSize(new Dimension(1200, 900));
         // window.setContentPane(bs);
         window.add(bs);
@@ -17,7 +17,8 @@ public abstract class Test {
         long sTime, eTime;
         boolean end = false;
         while (!end) {
-            System.out.println(bs.getBoids().get(0));
+            //System.out.println(bs.getBoids().get(0));
+            bs.printCollision();
             sTime = System.currentTimeMillis();
             eTime = sTime + 1000 / Boids.getSpeedFraction();
             bs.next();

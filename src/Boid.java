@@ -9,7 +9,7 @@ public class Boid{
     private static int nbBoid = 0;
     private static int nId = 0;
     private static final double turnFraction = Math.PI;
-    private static final int collisionRadius = 5;
+    private static final int collisionRadius = 20;
     private static final int detectionRadius = 70;
     private static final double detectionAngle = 240;
     private String id;
@@ -105,7 +105,7 @@ public class Boid{
 
     public void nextPos(int speedFraction, int widthLimit, int heightLimit, ArrayList<Boid> boids){
 
-        double angleStep = 5;   // angle between each collision segment
+        double angleStep = 1;   // angle between each collision segment
         double tmpx;            
         double tmpy;            
         double tmpdir = 0;
@@ -123,19 +123,19 @@ public class Boid{
 
         //System.out.println(tmpx);
         int r = (int)(Math.random()*2);
-        if(true){
+        if(r == 0){
 
             for(int i = 1; i*angleStep < detectionAngle/2; i++){
                 tmpx = position[0] + detectionRadius * Math.cos(direction + i*angleStep);
                 tmpy = position[1] + detectionRadius * Math.sin(direction + i*angleStep);
-                if(!intersects(position[0], position[1], tmpx, tmpy, boids) || !intersectWalls(tmpx, tmpy, widthLimit, heightLimit)){
+                if(!intersects(position[0], position[1], tmpx, tmpy, boids) && !intersectWalls(tmpx, tmpy, widthLimit, heightLimit)){
                     direction = (direction + (0.1));
                     break;
                 }
                 tmpx = position[0] + detectionRadius * Math.cos(direction - i*angleStep);
                 tmpy = position[1] + detectionRadius * Math.sin(direction - i*angleStep);
-                if(!intersects(position[0], position[1], tmpx, tmpy, boids) || !intersectWalls(tmpx, tmpy, widthLimit, heightLimit)){
-                    direction = (direction - (0.1)); 
+                if(!intersects(position[0], position[1], tmpx, tmpy, boids) && !intersectWalls(tmpx, tmpy, widthLimit, heightLimit)){
+                    direction = direction - (0.1); 
                     break;
                 }
             }
@@ -145,13 +145,13 @@ public class Boid{
                 tmpx = position[0] + detectionRadius * Math.cos(direction - i*angleStep);
                 tmpy = position[1] + detectionRadius * Math.sin(direction - i*angleStep);
                 if(!intersects(position[0], position[1], tmpx, tmpy, boids) && !intersectWalls(tmpx, tmpy, widthLimit, heightLimit)){
-                    direction = (direction - (0.1)) % 360;
+                    direction = (direction - (0.1));
                     break;
                 }
                 tmpx = position[0] + detectionRadius * Math.cos(direction + i*angleStep);
                 tmpy = position[1] + detectionRadius * Math.sin(direction + i*angleStep);
                 if(!intersects(position[0], position[1], tmpx, tmpy, boids) && !intersectWalls(tmpx, tmpy, widthLimit, heightLimit)){
-                    direction = (direction + (0.1)) % 360; 
+                    direction = (direction + (0.1)); 
                     break;
                 }
             }
@@ -183,6 +183,11 @@ public class Boid{
         return res;
     }
 
+    public boolean collide(Boid boid){
+        if(id == boid.getId()) return false;
+        return dist(boid) < collisionRadius;
+    }
+
     private static boolean counterClockWise(double ax, double ay, double bx,double by,double cx,double cy){
         return (cy - ay) * (bx - ax) > (by - ay) * (cx - ax);
     }
@@ -207,6 +212,17 @@ public class Boid{
             }
         }
         return false;
+    }
+
+    public void del(){
+        nbBoid--;
+        position = null;
+        direction = 0;
+        id = null;
+    }
+
+    public boolean isOutOfBounds(int widthLimit, int heightLimit){
+        return (position[0] >= widthLimit || position[0] < 0 || position[1] >= heightLimit || position[1] < 0);
     }
 
     private static double shortestDistance(double x1,double y1,double x2,double y2,double x3,double y3)

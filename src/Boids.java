@@ -12,6 +12,8 @@ public class Boids extends JPanel{
 
     private ArrayList<Boid> boids;
     private static final int speedFraction = 60;
+    private static final double[] angles = {0 , 2.44, 3.84};
+    private static final int[] ranges = {10,7,7};
 
     public Boids(){
         int height = 900;
@@ -31,7 +33,7 @@ public class Boids extends JPanel{
         setBackground(Color.WHITE);
         boids = new ArrayList<Boid>();
         for(int i = 0; i < nbBoid; i++){
-            double[] pos = {Math.random() * (width-50),Math.random() * (height-50)};
+            double[] pos = {Math.random() * (width-50)+25,Math.random() * (height-50)+25};
             double dir = (Math.random() * Math.PI);
             boids.add(new Boid(pos, dir));
             //System.out.println(boids.get(i));
@@ -51,11 +53,11 @@ public class Boids extends JPanel{
         int r = Boid.getCollisionRadius();
         int dr = Boid.getDetectionRadius();
         g.setColor(Color.BLACK);
-        g.drawOval(round(bx - dr/2), round(by - dr/2), dr, dr);
+        //g.drawOval(round(bx - dr/2), round(by - dr/2), dr, dr);
 
         g.drawLine(round(bx), round(by), round(bx + 30*Math.cos(dir)), round(by + 30*Math.sin(dir)));
         g.setColor(Color.RED);
-        g.fillOval(round(bx - r),round(by - r), r*2, r*2);
+        g.fillOval(round(bx - r/2),round(by - r/2), r, r);
     }
 
     public void next(){
@@ -66,8 +68,25 @@ public class Boids extends JPanel{
 
     public void drawBoids(Graphics g){
         for(int i = 0; i < boids.size(); i++){ 
-            drawBoid(boids.get(i), g);
+            //drawBoid(boids.get(i), g);
+            drawTriangle(boids.get(i), g);
         };
+    }
+
+    public void drawTriangle(Boid boid,Graphics g){
+        double dir = boid.getDirection();
+        int[] xs = new int[3];
+        int[] ys = new int[3];
+        for(int i = 0; i < 3; i++){
+            xs[i] = round(boid.getPosition()[0] + ranges[i] * Math.cos(dir + angles[i]));
+            ys[i] = round(boid.getPosition()[1] + ranges[i] * Math.sin(dir + angles[i]));
+        }
+        g.drawPolygon(xs,ys,3);
+    }
+
+    public void remove(Boid boid){
+        boids.remove(boid);
+        boid.del();
     }
 
     private int round(double d){
@@ -80,6 +99,16 @@ public class Boids extends JPanel{
     
     public ArrayList<Boid> getBoids(){
         return boids;
+    }
+
+    public void printCollision(){
+        for(int i = 0; i < boids.size(); i++){
+            for(int j = 0; j < boids.size(); j++){
+                if(boids.get(i).collide(boids.get(j))){
+                    System.out.println(boids.get(i).getId() + " collided with " + boids.get(j).getId());
+                }
+            }
+        }
     }
 
 }
