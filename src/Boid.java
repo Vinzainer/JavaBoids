@@ -1,29 +1,32 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-public class Boid{
+public class Boid {
 
-    //attributes
-    private double[] position;
-    private double direction; // in rad
-    private static double speed = 100.0;
     private static int nbBoid = 0;
     private static int nId = 0;
-    private static final double turnFraction = Math.PI;
-    private static final int collisionRadius = 20;
-    private static final int detectionRadius = 70;
-    private static final double detectionAngle = 240;
-    private String id;
+    private static double maxVelocity = 100.0;
+    private static int collisionRadius = 5;
+    private static int detectionRadius = 50;
 
-    //constructors
+    private double[] position;
+    private double[] vector; 
+    private double velocity;
+    private String id;
+    
+
+    // constructors
 
     /**
-     * Class Constructor  
-     * @param position double[2]
-     * @param direction double
+     * Class Constructor
+     * 
+     * @param position  double[2]
+     * @param velocity double
      */
-    public Boid(double[] position, double direction){
+    public Boid(double[] position, double[] vector) {
         this.position = position;
-        this.direction = direction;
+        this.vector = vector;
+        this.velocity = maxVelocity;
         this.id = genId();
         addNId(1);
         addNbBoid(1);
@@ -31,161 +34,142 @@ public class Boid{
     }
 
     /**
-     * Class Constructor for Copy  
+     * Class Constructor for Copy
+     * 
      * @param boid Boid to copy
      */
-    public Boid(Boid boid){
-        this.direction = boid.direction;
+    public Boid(Boid boid) {
+        this.velocity = boid.velocity;
         this.position = boid.position;
+        this.vector = boid.vector;
         this.id = genId();
         addNId(1);
         addNbBoid(1);
     }
 
-    //collisionRadius
-    public static int getCollisionRadius(){
-        return collisionRadius;
-    }
 
-    public static double getDetectionAngle(){
-        return detectionAngle;
-    }
+    // position
 
-    //direction
     /**
-     * Get-er for direction
-     * @return double direction attribute
+     * set-er for position
+     * 
+     * @param new_position double[2]
      */
-    public double getDirection(){
-        return direction;
-    }
-    
-    /**
-     * set-er for direction
-     * @param nDir double[2]
-     */
-    public void setDirection(double nDir){
-        direction = nDir;
-    }
-
-    /**
-     * modifier for direction todo
-     * @param delta double[2]
-     */
-    public void modDir(double[] delta){
-        //to do
-    }
-
-    //position
-
-    /**
-    * set-er for position
-    * @param new_position double[2]
-    */
-    public void setPosition(double[] new_position){
+    public void setPosition(double[] new_position) {
         position = new_position;
     }
 
     /**
      * get-er for Position
+     * 
      * @return double[2]
      */
-    public double[] getPosition(){
+    public double[] getPosition() {
         return position;
     }
 
+    public double[] getVector(){
+        return vector;
+    }
+
+    public void warp() {
+        if (position[0] < - collisionRadius) position[0] = 1200 + collisionRadius;
+        if (position[1] < - collisionRadius) position[1] = 900 + collisionRadius;
+        if (position[0] > 1200 + collisionRadius) position[0] = - collisionRadius;
+        if (position[1] > 900 + collisionRadius) position[1] = - collisionRadius;
+    }
+
+    private static double[] normalize(double[] vect){
+        if(vect.length == 0){
+            return vect;
+        }
+        double sum = 0;
+        double[] ret = new double[vect.length];
+        for(double d : vect){
+            sum += Math.abs(d);
+        }
+        for(int i = 0; i < vect.length; i++){
+            ret[i] = vect[i]/sum;
+        }
+        return ret;
+    }
+
     /**
-     * modifier for position
-     * @param delta double[2]
+     * TODO
+     * @param velocityFraction
+     * @param widthLimit
+     * @param heightLimit
+     * @param boids
      */
-    public void modPosition(double[] delta){
-        double[] newPos = {position[0] + delta[0], position[1] + delta[1]};
-        position = newPos;
+    public void nextPos(int velocityFraction, int widthLimit, int heightLimit, ArrayList<Boid> boids) {
+
+        ArrayList<Boid> inDetectionRange = inRange(boids, detectionRadius);
+        
+        double[] alignementVect = alignement(inDetectionRange);
+        
+        vector[0] = vector[0] + alignementVect[0];
+        vector[1] = vector[1] + alignementVect[1];
+        vector = normalize(vector);
+        
+        position[0] += (vector[0]) * velocity * 0.02;
+        position[1] += (vector[1]) * velocity * 0.02;
+        warp();
     }
 
-    public void nextPos(int speedFraction, int widthLimit, int heightLimit, ArrayList<Boid> boids){
 
-        double angleStep = 1;   // angle between each collision segment
-        double tmpx;            
-        double tmpy;            
-        double tmpdir = 0;
-        double[] nPos = new double[2];      
-        tmpx = position[0] + detectionRadius * Math.cos(direction);             // in front
-        tmpy = position[1] + detectionRadius * Math.sin(direction);             // in front
 
-        if( !intersects(position[0],position[1],tmpx,tmpy,boids) && !intersectWalls(tmpx, tmpy, widthLimit, heightLimit)){
-            nPos[0] = position[0] + speed/speedFraction * Math.cos(direction);
-            nPos[1] = position[1] + speed/speedFraction * Math.sin(direction);
-            position = nPos;
-            //System.out.println("all good");
-            return;
+    private double[] alignement(ArrayList<Boid> boids){
+        double[] retVector = {0,0};
+        if(boids.isEmpty()) return retVector;
+        for(int i = 0; i < boids.size(); i++){
+            retVector[0] += boids.get(i).getPosition()[0];
+            retVector[1] += boids.get(i).getPosition()[1];
         }
+        retVector[0] = (retVector[0]/boids.size() - position[0])/100;
+        retVector[1] = (retVector[1]/boids.size() - position[1])/100;
 
-        //System.out.println(tmpx);
-        int r = (int)(Math.random()*2);
-        if(r == 0){
-
-            for(int i = 1; i*angleStep < detectionAngle/2; i++){
-                tmpx = position[0] + detectionRadius * Math.cos(direction + i*angleStep);
-                tmpy = position[1] + detectionRadius * Math.sin(direction + i*angleStep);
-                if(!intersects(position[0], position[1], tmpx, tmpy, boids) && !intersectWalls(tmpx, tmpy, widthLimit, heightLimit)){
-                    direction = (direction + (0.1));
-                    break;
-                }
-                tmpx = position[0] + detectionRadius * Math.cos(direction - i*angleStep);
-                tmpy = position[1] + detectionRadius * Math.sin(direction - i*angleStep);
-                if(!intersects(position[0], position[1], tmpx, tmpy, boids) && !intersectWalls(tmpx, tmpy, widthLimit, heightLimit)){
-                    direction = direction - (0.1); 
-                    break;
-                }
-            }
-        }
-        else{
-            for(int i = 1; i*angleStep < detectionAngle/2; i++){
-                tmpx = position[0] + detectionRadius * Math.cos(direction - i*angleStep);
-                tmpy = position[1] + detectionRadius * Math.sin(direction - i*angleStep);
-                if(!intersects(position[0], position[1], tmpx, tmpy, boids) && !intersectWalls(tmpx, tmpy, widthLimit, heightLimit)){
-                    direction = (direction - (0.1));
-                    break;
-                }
-                tmpx = position[0] + detectionRadius * Math.cos(direction + i*angleStep);
-                tmpy = position[1] + detectionRadius * Math.sin(direction + i*angleStep);
-                if(!intersects(position[0], position[1], tmpx, tmpy, boids) && !intersectWalls(tmpx, tmpy, widthLimit, heightLimit)){
-                    direction = (direction + (0.1)); 
-                    break;
-                }
-            }
-        }
-
-        nPos[0] = position[0] + speed/speedFraction * Math.cos(direction);
-        nPos[1] = position[1] + speed/speedFraction * Math.sin(direction);
-        position = nPos;
-    }
-    /**
-     * todo
-     * @param x
-     * @param y
-     * @return
-     */
-    private  boolean intersect(double ax, double ay, double bx, double by,Boid boid){
-        if(boid == this) return false;
-
-        return shortestDistance(ax, ay, bx, by, boid.getPosition()[0],boid.getPosition()[1]) < collisionRadius;
+        return retVector;
     }
 
-    private ArrayList<Boid> inRange(ArrayList<Boid> boids){
+    ///** 
+    // * TODO
+    // * @return
+    // */
+    //private double[] cohesion(){
+//
+    //    
+    //}
+//
+    ///**
+    // * TODO
+    // * @return
+    // */
+    //private double[] separation(){
+//
+    //}
+
+    private ArrayList<Boid> inRange(ArrayList<Boid> boids, int range){
         ArrayList<Boid> res = new ArrayList<>();
         for(int i = 0; i < boids.size(); i++){
-            if(dist(boids.get(i)) < detectionRadius){
+            if(dist(boids.get(i)) < range && boids.get(i).getId() != id){
                 res.add(boids.get(i));
             }
         }
         return res;
     }
 
-    public boolean collide(Boid boid){
-        if(id == boid.getId()) return false;
-        return dist(boid) < collisionRadius;
+    private double getAngle(Boid boid){
+        double dx = boid.getPosition()[0] - position[0];
+        double dy = boid.getPosition()[1] - position[1];
+        return angle_trunc(Math.atan2(dy,dx));
+    }
+
+    private double angle_trunc(double a){
+        double b = a;
+        while(b < 0.0){
+            b += Math.PI *2;
+        }
+        return b;
     }
 
     private static boolean counterClockWise(double ax, double ay, double bx,double by,double cx,double cy){
@@ -205,49 +189,16 @@ public class Boid{
                 intersect2Segments(position[0], position[1], ax, ay, widthLimit, 0, 0, 0)); 
     }
 
-    private boolean intersects(double ax, double ay, double bx, double by, ArrayList<Boid> boids){
-        for(int i = 0; i < boids.size(); i++){
-            if(intersect(ax,ay,bx,by,boids.get(i))){
-                return true;
-            }
-        }
-        return false;
-    }
 
     public void del(){
         nbBoid--;
         position = null;
-        direction = 0;
+        vector = null;
         id = null;
     }
 
     public boolean isOutOfBounds(int widthLimit, int heightLimit){
         return (position[0] >= widthLimit || position[0] < 0 || position[1] >= heightLimit || position[1] < 0);
-    }
-
-    private static double shortestDistance(double x1,double y1,double x2,double y2,double x3,double y3)
-    {
-        double px=x2-x1;
-        double py=y2-y1;
-        double temp=(px*px)+(py*py);
-        double u=((x3 - x1) * px + (y3 - y1) * py) / (temp);
-        if(u>1){
-            u=1;
-        }
-        else if(u<0){
-            u=0;
-        }
-        double x = x1 + u * px;
-        double y = y1 + u * py;
-        double dx = x - x3;
-        double dy = y - y3;
-        double dist = Math.sqrt(dx*dx + dy*dy);
-        return dist;
-
-    }
-
-    public static int getDetectionRadius(){
-        return detectionRadius;
     }
 
     private double dist(Boid boid){
@@ -256,31 +207,33 @@ public class Boid{
         return Math.sqrt((boid.getPosition()[0] - sx)*(boid.getPosition()[0] - sx) + (boid.getPosition()[1] - sy)*(boid.getPosition()[1] - sy));
     }
 
-    //speed
+
+    public static int getDetectionRadius(){
+        return detectionRadius;
+    }
+
+    public static int getCollisionRadius(){
+        return collisionRadius;
+    }
+
+    //velocity
 
     /**
-     * set-er for speed
+     * set-er for velocity
      * @param spd double
      */
-    public static void setSpeed(double spd){
-        speed = spd;
+    public void setVelocity(double spd){
+        velocity = spd;
     }
 
     /**
-     * get-er for speed
-     * @return speed attribute
+     * get-er for velocity
+     * @return velocity attribute
      */
-    public static double getSpeed(){
-        return speed;
+    public double getVelocity(){
+        return velocity;
     }
 
-    /**
-     * modifier for speed
-     * @param delta double[2]
-     */
-    public static void modSpeed(double delta){
-        speed += delta;
-    }
 
     //id
 
@@ -342,7 +295,7 @@ public class Boid{
     public String toString(){
         String res = id + ":\n";
         res += "position  x: " + position[0] + " y: " + position[1] + "\n";
-        res += "direction rad: " + direction + " deg : " + direction * 180/Math.PI ;
+        res += "vector : " + vector[0] + "," + vector[1] + "rad : " + Math.atan2(vector[0], vector[1]);
         return res;
     }
 
