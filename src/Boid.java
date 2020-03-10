@@ -10,16 +10,16 @@ public class Boid {
     private static int detectionRadius = 50;
 
     private double[] position;
-    private double[] vector; 
+    private double[] vector;
     private double velocity;
     private String id;
-    
+
 
     // constructors
 
     /**
      * Class Constructor
-     * 
+     *
      * @param position  double[2]
      * @param velocity double
      */
@@ -35,7 +35,7 @@ public class Boid {
 
     /**
      * Class Constructor for Copy
-     * 
+     *
      * @param boid Boid to copy
      */
     public Boid(Boid boid) {
@@ -52,7 +52,7 @@ public class Boid {
 
     /**
      * set-er for position
-     * 
+     *
      * @param new_position double[2]
      */
     public void setPosition(double[] new_position) {
@@ -61,7 +61,7 @@ public class Boid {
 
     /**
      * get-er for Position
-     * 
+     *
      * @return double[2]
      */
     public double[] getPosition() {
@@ -73,10 +73,8 @@ public class Boid {
     }
 
     public void warp() {
-        if (position[0] < - collisionRadius) position[0] = 1200 + collisionRadius;
-        if (position[1] < - collisionRadius) position[1] = 900 + collisionRadius;
-        if (position[0] > 1200 + collisionRadius) position[0] = - collisionRadius;
-        if (position[1] > 900 + collisionRadius) position[1] = - collisionRadius;
+        position[0] = (position[0]+1200.0)%1200.0;
+        position[1] = (position[1]+900.0)%900.0;
     }
 
     private static double[] normalize(double[] vect){
@@ -104,13 +102,14 @@ public class Boid {
     public void nextPos(int velocityFraction, int widthLimit, int heightLimit, ArrayList<Boid> boids) {
 
         ArrayList<Boid> inDetectionRange = inRange(boids, detectionRadius);
-        
+
         double[] alignementVect = alignement(inDetectionRange);
-        
-        vector[0] = vector[0] + alignementVect[0];
-        vector[1] = vector[1] + alignementVect[1];
+        double[] cohesionVect = cohesion(inDetectionRange);
+
+        vector[0] = vector[0] + cohesionVect[0]; //+ alignementVect[0];
+        vector[1] = vector[1] + cohesionVect[1]; //+ alignementVect[1];
         vector = normalize(vector);
-        
+
         position[0] += (vector[0]) * velocity * 0.02;
         position[1] += (vector[1]) * velocity * 0.02;
         warp();
@@ -118,27 +117,35 @@ public class Boid {
 
 
 
-    private double[] alignement(ArrayList<Boid> boids){
+    private double[] cohesion(ArrayList<Boid> boids){
         double[] retVector = {0,0};
         if(boids.isEmpty()) return retVector;
         for(int i = 0; i < boids.size(); i++){
             retVector[0] += boids.get(i).getPosition()[0];
             retVector[1] += boids.get(i).getPosition()[1];
         }
-        retVector[0] = (retVector[0]/boids.size() - position[0])/100;
-        retVector[1] = (retVector[1]/boids.size() - position[1])/100;
+        retVector[0] = (retVector[0]/boids.size() - position[0]);
+        retVector[1] = (retVector[1]/boids.size() - position[1]);
 
-        return retVector;
+        return normalize(retVector);
     }
 
-    ///** 
+    ///**
     // * TODO
     // * @return
-    // */
-    //private double[] cohesion(){
-//
-    //    
-    //}
+
+    private double[] alignement(ArrayList<Boid> boids){
+      double[] retVector = {0,0};
+      if(boids.isEmpty()) return retVector;
+        for(int i = 0; i < boids.size(); i++){
+          retVector[0] += boids.get(i).getPosition()[0];
+          retVector[1] += boids.get(i).getPosition()[1];
+        }
+      retVector[0] = retVector[0]/boids.size();
+      retVector[1] = retVector[1]/boids.size();
+
+      return normalize(retVector);
+    }
 //
     ///**
     // * TODO
@@ -186,7 +193,7 @@ public class Boid {
         return (intersect2Segments(position[0], position[1], ax, ay, 0, 0, 0, heightLimit) ||
                 intersect2Segments(position[0], position[1], ax, ay, 0, heightLimit, widthLimit, heightLimit) ||
                 intersect2Segments(position[0], position[1], ax, ay, widthLimit, heightLimit, widthLimit, 0) ||
-                intersect2Segments(position[0], position[1], ax, ay, widthLimit, 0, 0, 0)); 
+                intersect2Segments(position[0], position[1], ax, ay, widthLimit, 0, 0, 0));
     }
 
 
@@ -261,7 +268,7 @@ public class Boid {
     }
 
     /***
-     * set-er for id 
+     * set-er for id
      * @param nId String
      */
     public void setId(String nId){
@@ -289,7 +296,7 @@ public class Boid {
     //others
 
     /**
-     * Make a simple description of the object and return it as a String 
+     * Make a simple description of the object and return it as a String
      */
     @Override
     public String toString(){
