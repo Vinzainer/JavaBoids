@@ -8,6 +8,7 @@ public class Boid {
     private static double maxVelocity = 100.0;
     private static int collisionRadius = 5;
     private static int detectionRadius = 50;
+    private static int safeRadius = 20;
 
     private double[] position;
     private double[] vector;
@@ -102,12 +103,14 @@ public class Boid {
     public void nextPos(int velocityFraction, int widthLimit, int heightLimit, ArrayList<Boid> boids) {
 
         ArrayList<Boid> inDetectionRange = inRange(boids, detectionRadius);
+        ArrayList<Boid> inSafeRange = inRange(boids, safeRadius);
 
         double[] alignementVect = alignement(inDetectionRange);
         double[] cohesionVect = cohesion(inDetectionRange);
+        double[] separationVect = separation(inSafeRange);
 
-        vector[0] = vector[0] + cohesionVect[0]; //+ alignementVect[0];
-        vector[1] = vector[1] + cohesionVect[1]; //+ alignementVect[1];
+        vector[0] = vector[0] + cohesionVect[0]*0.05 + alignementVect[0] * 0.1 + separationVect[0] * 0.2; //+ alignementVect[0];
+        vector[1] = vector[1] + cohesionVect[1]*0.05 + alignementVect[1] * 0.1 + separationVect[1] * 0.2 ; //+ alignementVect[1];
         vector = normalize(vector);
 
         position[0] += (vector[0]) * velocity * 0.02;
@@ -130,10 +133,6 @@ public class Boid {
         return normalize(retVector);
     }
 
-    ///**
-    // * TODO
-    // * @return
-
     private double[] alignement(ArrayList<Boid> boids){
       double[] retVector = {0,0};
       if(boids.isEmpty()) return retVector;
@@ -146,7 +145,7 @@ public class Boid {
 
       return normalize(retVector);
     }
-//
+
     /**
      * TODO
      * @return
