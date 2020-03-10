@@ -147,13 +147,24 @@ public class Boid {
       return normalize(retVector);
     }
 //
-    ///**
-    // * TODO
-    // * @return
-    // */
-    //private double[] separation(){
-//
-    //}
+    /**
+     * TODO
+     * @return
+     */
+    private double[] separation(ArrayList<Boid> boids){
+        double[] retVector = {0,0};
+        if(boids.isEmpty()){
+            return retVector;
+        }
+        for(int i = 0; i < boids.size(); i++){
+            retVector[0] += boids.get(i).getPosition()[0];
+            retVector[1] += boids.get(i).getPosition()[1]; 
+        }
+        retVector[0] = -(retVector[0]/boids.size() - position[0])/100;
+        retVector[1] = -(retVector[1]/boids.size() - position[1])/100;
+        retVector = normalize(retVector);
+        return retVector;
+    }
 
     private ArrayList<Boid> inRange(ArrayList<Boid> boids, int range){
         ArrayList<Boid> res = new ArrayList<>();
@@ -305,5 +316,6 @@ public class Boid {
         res += "vector : " + vector[0] + "," + vector[1] + "rad : " + Math.atan2(vector[0], vector[1]);
         return res;
     }
+
 
 }
