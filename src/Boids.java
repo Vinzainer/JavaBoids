@@ -11,7 +11,7 @@ public class Boids extends JPanel{
     private ArrayList<Boid> boids;
     private static final int speedFraction = 60;
     private static final double[] angles = {0 , 2.44, 3.84};
-    private static final int[] ranges = {10,7,7};
+    private static final int[] ranges = {7,5,5};
 
     public Boids(){
         int height = 900;

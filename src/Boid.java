@@ -7,8 +7,8 @@ public class Boid {
     private static int nId = 0;
     private static double maxVelocity = 100.0;
     private static int collisionRadius = 5;
-    private static int detectionRadius = 50;
-    private static int safeRadius = 20;
+    private static int detectionRadius = 75;
+    private static int safeRadius = 30;
 
     private double[] position;
     private double[] vector;
@@ -83,9 +83,12 @@ public class Boid {
             return vect;
         }
         double sum = 0;
-        double[] ret = new double[vect.length];
+        double[] ret = {0,0};
         for(double d : vect){
             sum += Math.abs(d);
+        }
+        if(sum == 0){
+            return ret;
         }
         for(int i = 0; i < vect.length; i++){
             ret[i] = vect[i]/sum;
@@ -108,17 +111,50 @@ public class Boid {
         double[] alignementVect = alignement(inDetectionRange);
         double[] cohesionVect = cohesion(inDetectionRange);
         double[] separationVect = separation(inSafeRange);
+        double[] criticalAvoidanceVect = avoidance(1200,900,safeRadius);
+        double[] avoidanceVect = avoidance(1200,900,detectionRadius);
 
-        vector[0] = vector[0] + cohesionVect[0]*0.05 + alignementVect[0] * 0.1 + separationVect[0] * 0.2; //+ alignementVect[0];
-        vector[1] = vector[1] + cohesionVect[1]*0.05 + alignementVect[1] * 0.1 + separationVect[1] * 0.2 ; //+ alignementVect[1];
+        printList(alignementVect);
+        printList(cohesionVect);
+        printList(separationVect);
+        System.out.println("------");
+
+        vector[1] = vector[1] + cohesionVect[1]*0.01 + alignementVect[1] * 0.05 + separationVect[1] * 0.2  + criticalAvoidanceVect[1] * 0.1 + avoidanceVect[1] * 0.1 ;
+        vector[0] = vector[0] + cohesionVect[0]*0.01 + alignementVect[0] * 0.05 + separationVect[0] * 0.2  + criticalAvoidanceVect[0] * 0.1 + avoidanceVect[0] * 0.1 ;
         vector = normalize(vector);
+
 
         position[0] += (vector[0]) * velocity * 0.02;
         position[1] += (vector[1]) * velocity * 0.02;
         warp();
     }
 
+    public static void printList(double[] l){
+        String str = "{";
+        for(double i : l){
+            str += i + ", ";
+        }
+        System.out.println(str + '}');
+    }
 
+    private double[] avoidance(int width, int height, int radius){
+        double[] retVector = {0,0};
+        double x = position[0];
+        double y = position[1];
+        if(x < radius){
+            retVector[0] += 1;
+        }
+        else if(x > width - radius){
+            retVector[0] += -1;
+        }
+        if(y < radius){
+            retVector[1] += 1;
+        }
+        else if(y > height - radius){
+            retVector[1] += -1;
+        }
+        return normalize(retVector);
+    }
 
     private double[] cohesion(ArrayList<Boid> boids){
         double[] retVector = {0,0};
@@ -137,8 +173,8 @@ public class Boid {
       double[] retVector = {0,0};
       if(boids.isEmpty()) return retVector;
         for(int i = 0; i < boids.size(); i++){
-          retVector[0] += boids.get(i).getPosition()[0];
-          retVector[1] += boids.get(i).getPosition()[1];
+          retVector[0] += boids.get(i).getVector()[0];
+          retVector[1] += boids.get(i).getVector()[1];
         }
       retVector[0] = retVector[0]/boids.size();
       retVector[1] = retVector[1]/boids.size();
@@ -159,8 +195,8 @@ public class Boid {
             retVector[0] += boids.get(i).getPosition()[0];
             retVector[1] += boids.get(i).getPosition()[1]; 
         }
-        retVector[0] = -(retVector[0]/boids.size() - position[0])/100;
-        retVector[1] = -(retVector[1]/boids.size() - position[1])/100;
+        retVector[0] = -(retVector[0]/boids.size() - position[0]);
+        retVector[1] = -(retVector[1]/boids.size() - position[1]);
         retVector = normalize(retVector);
         return retVector;
     }
@@ -168,17 +204,27 @@ public class Boid {
     private ArrayList<Boid> inRange(ArrayList<Boid> boids, int range){
         ArrayList<Boid> res = new ArrayList<>();
         for(int i = 0; i < boids.size(); i++){
-            if(dist(boids.get(i)) < range && boids.get(i).getId() != id){
+            if(Math.abs(dist(boids.get(i))) < range && boids.get(i).getId() != id  && visible(boids.get(i), 3) ){
                 res.add(boids.get(i));
             }
         }
         return res;
     }
 
-    private double getAngle(Boid boid){
+    private double[] getAngle(Boid boid){
         double dx = boid.getPosition()[0] - position[0];
         double dy = boid.getPosition()[1] - position[1];
-        return angle_trunc(Math.atan2(dy,dx));
+        double[] res = {dx,dy};
+        return normalize(res);
+    }
+
+    private boolean visible(Boid boid, double fov){
+        double[] vect = getAngle(boid);
+        double angle = Math.atan2(vect[0], vect[1]);
+        double dir = Math.atan2(vector[0],vector[1]);
+        return !(angle > dir + Math.PI - fov/2 && angle < dir + Math.PI + fov/2);
+
+
     }
 
     private double angle_trunc(double a){
